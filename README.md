@@ -1,8 +1,8 @@
 # \[Group name\]
 
 **Group members:**
-- A
-- B
+- Iari Orlandi
+- Vittoria Ricci
 - C
 
 This repository contains  
