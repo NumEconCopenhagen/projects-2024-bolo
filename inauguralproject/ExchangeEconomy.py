@@ -35,17 +35,17 @@ class ExchangeEconomyClass:
 
         return x1b**self.par.beta*x2b**(1-self.par.beta)  
 
-    def demand_A(self,p1):
+    def demand_A(self,p1,w1A=0.8,w2A=0.3):
 
         '''This function finds the demand for x1 and x2 for agent A.'''
         
-        return self.par.alpha*(p1* self.par.w1A + self.par.p2*self.par.w2A)/p1,(1-self.par.alpha)*(p1* self.par.w1A + self.par.p2*self.par.w2A)/self.par.p2
+        return self.par.alpha*(p1* w1A + self.par.p2*w2A)/p1,(1-self.par.alpha)*(p1* w1A + self.par.p2*w2A)/self.par.p2
     
-    def demand_B(self,p1):
+    def demand_B(self,p1,w1A=0.8,w2A=0.3):
 
         '''This function finds the demand for x1 and x2 for agent B.'''
 
-        return self.par.beta*(p1* (1-self.par.w1A) + self.par.p2* (1-self.par.w2A))/p1,(1-self.par.beta)*(p1* (1-self.par.w1A) + self.par.p2*(1-self.par.w2A))/self.par.p2
+        return self.par.beta*(p1* (1-w1A) + self.par.p2* (1-w2A))/p1,(1-self.par.beta)*(p1* (1-w1A) + self.par.p2*(1-w2A))/self.par.p2
     
     #Question 1
     def pareto_opt_allocations(self):
@@ -141,7 +141,6 @@ class ExchangeEconomyClass:
         p1_optimal = result.x 
         return p1_optimal,(1- self.demand_B(p1_optimal)[0]),(1-self.demand_B(p1_optimal)[1]),self.utility_function_A(1- self.demand_B(p1_optimal)[0],(1- self.demand_B(p1_optimal)[1]))
     
-
     #Question 5a
     def market_maker_A_restrictedtoC(self):
 
@@ -151,6 +150,7 @@ class ExchangeEconomyClass:
         for i,j in zip(self.pareto_opt_allocations()[0],self.pareto_opt_allocations()[1]):
             utilityfunction.append(self.utility_function_A(i,j))  
             max_utility = utilityfunction.index(np.max(utilityfunction))
+        #p1_optimal = (1 - (1 - alpha) * w1A) / ((1 - alpha) * w2A)
         return self.pareto_opt_allocations()[0][max_utility],self.pareto_opt_allocations()[1][max_utility],self.utility_function_A(self.pareto_opt_allocations()[0][max_utility],self.pareto_opt_allocations()[1][max_utility])
     
     #Question 5b
@@ -183,8 +183,6 @@ class ExchangeEconomyClass:
                                           initial_guess, method='SLSQP', bounds=bounds)  
     
             return sol_case3.x[0], sol_case3.x[1],self.utility_function_A(sol_case3.x[0], sol_case3.x[1])
-
-    
     
     #Question 8
 
@@ -192,26 +190,23 @@ class ExchangeEconomyClass:
 
         '''This function finds the allocations of x1 and x2 for agent A and B in the Edgeworth box given the random draws of w1a and w2a.'''
 
-        par=self.par
-        np.random.seed(seed=1234)
-        
+        par = self.par
+        np.random.seed(seed=1234)  # Ensure the same seed is used for each iteration if necessary
         p1 = []
         x1 = []
         x2 = []
         i = 0
-
+        
         while i < par.P: 
 
-            par.w1a = np.random.uniform(0,1,size=1)
-            par.w2a = np.random.uniform(0,1,size=1)
-            obj = lambda p1: np.sum(self.demand_A(p1)[0]+ self.demand_B(p1)[0]) -1 
-            result = optimize.root(obj,0.7, method='hybr')
+            w1a = np.random.uniform(0, 1, size=1)
+            w2a = np.random.uniform(0, 1, size=1)
+            obj = lambda p1: np.sum(self.demand_A(p1,w1A=w1a,w2A=w2a)[0] + self.demand_B(p1,w1A=w1a,w2A=w2a)[0]) - 1 
+            result = optimize.root(obj, 0.7, method='hybr')
             p1_optimal = result.x[0]
             p1.append(p1_optimal)
-            x1.append(self.demand_A(p1_optimal)[0])
-            x2.append(self.demand_A(p1_optimal)[1])
-            i +=1
-        return p1,x1,x2
+            x1.append(self.demand_A(p1_optimal,w1A=w1a,w2A=w2a)[0])
+            x2.append(self.demand_A(p1_optimal,w1A=w1a,w2A=w2a)[1])
+            i += 1
 
-
-    
+        return p1, x1, x2
