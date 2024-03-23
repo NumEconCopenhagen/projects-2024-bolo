@@ -211,7 +211,7 @@ class ExchangeEconomyClass:
         p2: price of good 2
         demand_B: demand function of agent B
         utility_function_A: utility function of agent A
-        N: number of observations
+
 
         Returns:
     
@@ -325,7 +325,6 @@ class ExchangeEconomyClass:
         '''
     #a. Set up:
         par = self.par # Predefined parameters are recalled
-        x = self.pareto_opt_allocations() 
         constraints = ({'type': 'ineq', 'fun': lambda x: self.utility_function_B(1-x[0],1-x[1]) - self.utility_function_B(1-par.w1A,1-par.w2A)})
         bounds = [(0, 1), (0, 1)]  # Bounds for x1 and x2
         initial_guess = [0.80,0.89] # Initial guess
