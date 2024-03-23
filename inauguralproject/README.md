@@ -1,5 +1,8 @@
-# Inaugural project
+# \[Group name\]
 
-The **results** of the project can be seen from running [inauguralproject.ipynb](inauguralproject.ipynb).
+**Group members:**
+- Iari Orlandi
+- Vittoria Ricci
 
-**Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires no further packages.
+This repository contains  
+1. Inaugural project: A code is structured to analyze an exchange economy with two consumers, A and B, and two goods, x1 and x2. Exercises are undertaken to understand how the agents' optimal choices change when the object with respect to which they maximise their utility changes, when constraint change, when they become market makers and when a social planner is called to maximise their aggregate utility. In particular, in Exercise 1 the targeted unkown is the pareto optimal allocation, i.e. the pairs of combinations of xA1 and xA2 that leave both players as least as well off as they were when consuming their endowments. In exercise 2, the error in the market clearing condition for a discrete set of prices is computed and in Exercise 3 the market clearing price is found. In Exercise 4 the objective quantity becomes the optimal price that maximises A's utility, in 4a the calculation is constrained to the previously found discrete subset of prices P and in 4b the constraint is loosened and any positive price can be chosen. In Exercise 5 A maximises his own utility by choosing optimal allocations of the two available goods as the market maker but such that B is not worse of than in the initial endowment. In 5a A's choice set is restricted to the pareto optimal allocations found in 2, i.e. C, whereas in 5b his only constraints are that demands are bounded between 0 and 1 and that B's utility in the optimal allocations is not lower than that in his initial endowment. In Exxercise 6 utility is maximised with respect to demand by a utilitarian social planner who maximize aggregate utility. Finally, in Exercise 7 and 8 endowments are drawn as random sets, rather than being considered as deterministic quantities, and the market equilibrium allocation is found for each allocation and plot in the Edgeworth box.
