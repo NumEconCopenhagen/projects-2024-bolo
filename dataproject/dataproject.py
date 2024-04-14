@@ -169,7 +169,7 @@ class dataproject:
 
         Description:
 
-        The function inserts a dot as decimal separation. This function has been created because the dataset contains the fertility rate without any decimal separation.
+        The function inserts a dot as decimal separation. This function has been created because the dataset in the ISTAT website contains the fertility rate without any decimal separation.
 
         Args:
 
