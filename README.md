@@ -3,7 +3,7 @@
 **Group members:**
 - Iari Orlandi
 - Vittoria Ricci
-- C
+- Maja Hundsdahl
 
 This repository contains  
 1. Inaugural project. 
