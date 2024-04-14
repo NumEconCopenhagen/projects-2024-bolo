@@ -21,11 +21,11 @@ class dataproject:
         data_2021: data frame with the population estimates from 2021
         regional_fertility: data frame with the fertility rate for each region
         '''
-        self.data_til01 = pd.read_csv('Population estimates 1992-2001.csv')
-        self.data_til21 = pd.read_csv('Population estimates 2002-2019.csv')
-        self.data_2020 = pd.read_csv('Resident_population_2020.csv')
-        self.data_2021 = pd.read_csv('Resident_population_2021.csv')
-        self.regional_fertility = pd.read_csv('Fertility.csv')
+        self.data_til01 = pd.read_csv('Data/Population estimates 1992-2001.csv')
+        self.data_til21 = pd.read_csv('Data/Population estimates 2002-2019.csv')
+        self.data_2020 = pd.read_csv('Data/Resident_population_2020.csv')
+        self.data_2021 = pd.read_csv('Data/Resident_population_2021.csv')
+        self.regional_fertility = pd.read_csv('Data/Fertility.csv')
 
         
     def merge(self):
