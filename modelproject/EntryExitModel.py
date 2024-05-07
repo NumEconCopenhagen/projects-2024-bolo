@@ -292,3 +292,34 @@ class EntryExitModel():
         print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,self.entrant_opt(optimal_q))}') if self.entrant_opt(optimal_q) > 0 else print(f'Entrant does not enter in the market')
         print(f'Y is equal to: {self.Y()}')
         return optimal_q, self.entrant_opt(optimal_q)
+
+
+    def profit_m_ext(self,q_m): 
+        
+        x_entrant = self.entrant_opt_ext(q_m)
+        
+        return self.demand(q_m,x_entrant) * q_m - self.cost(q_m)
+    
+
+    def entrant_opt_ext(self,q_m):  # entrant optimization
+        
+        par = self.par
+        def obj(q_e):
+            return - self.profit_e(q_m,q_e)
+
+        sol = optimize.minimize(obj, x0=[1], bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_e: (par.d-par.c)/par.b - q_e + q_m}, method="SLSQP", tol=1e-10)
+        return sol.x[0]
+
+    def m_opt_ext(self):
+        
+        par = self.par
+        def obj(q_m):
+            return -self.profit_m_ext(q_m)
+        sol = optimize.minimize(obj, x0=[1],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt_ext(q_m) + q_m},method='SLSQP', tol=1e-10)
+        optimal_q = sol.x[0] 
+
+        print(f'Optimal quantity for the leader firm: {optimal_q}')
+        print(f'Equilibium profit for the leader firm: {self.profit_m_ext(optimal_q)}')
+        print(f'Optimal quantity for the follower firm: {self.entrant_opt_ext(optimal_q)}')
+        print(f'Equilibium profit for the follower firm: {self.profit_e(optimal_q,self.entrant_opt_ext(optimal_q))}') if self.entrant_opt_ext(optimal_q) > 0 else print(f'Follower does not enter in the market')
+        return optimal_q, self.entrant_opt_ext(optimal_q)
