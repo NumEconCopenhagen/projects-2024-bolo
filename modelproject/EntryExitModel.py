@@ -21,10 +21,12 @@ class EntryExitModel():
         """ baseline parameters """
         par = self.par
         symbolic = self.symbolic
-        par.a = 5
         par.b = 1
-        par.F = 0.07
-      
+        par.F = 1
+        par.c = 2
+        par.d = 7
+        par.a = par.d - par.c
+
         symbolic.a = sm.symbols('a')
         symbolic.b = sm.symbols('b')
         symbolic.q_m = sm.symbols('q_m')
@@ -123,7 +125,7 @@ class EntryExitModel():
 
         symbolic = self.symbolic
         par = self.par
-        F_vals = [0.07, 1, 3.5]  # List of F values
+        F_vals = [0.01, 1, 2.5]  # List of F values
         q_m_values = np.linspace(0, par.a/par.b, 10000)
 
         # Create the figure
@@ -150,13 +152,18 @@ class EntryExitModel():
             crit_points_values = [cp.evalf(subs={symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}) for cp in crit_points1]
             crit_points_values_1 = [cp.evalf(subs={symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}) for cp in crit_points2]
             profit_at_crit_points = [profit_m_e_func(cp) for cp in crit_points_values]
+            profit_at_crit_points_1 = [profit_m_e_func(Y_val) for Y_val in crit_points_values_1]
             plt.scatter(crit_points_values, profit_at_crit_points, color='red', label='Monopoly profit')
             plt.scatter(Y_val, profit_m_e_func(Y_val), color='green', label='Y')
             plt.xlabel('q_m')
             plt.ylabel('profit_m_e')
             plt.title(f'Profit as a function of the quantity of firm m (F={F_val})')
+            max_index = np.argmax([max(profit_at_crit_points), max(profit_at_crit_points_1)])
+            max_x = max(crit_points_values[max_index], crit_points_values_1[max_index])
+            max_y = max(profit_at_crit_points[max_index], profit_at_crit_points_1[max_index])
+            plt.annotate(f'Maximum value: {max_y:.2f}', xy=(max_x, max_y), xytext=(max_x - 1, max_y - 1),
+             arrowprops=dict(facecolor='red', shrink=0.05))
             plt.grid(False)
-            
         plt.tight_layout()
         plt.show()
 
@@ -185,19 +192,39 @@ class EntryExitModel():
             plt.plot(F, profit_values,color="black")
             plt.plot(F, first_profit_values, color="black", linestyle='--')
             plt.plot(F, last_profit_values, color="black", linestyle='--')
+            plt.text(0.4, 4.6, 'EI', style='italic', fontsize=12)
+            plt.text(0.5, 2.7, 'EA', style='italic', fontsize=12)
+            plt.text(1.75, 4.6, 'EB', style='italic', fontsize=12)
             plt.xlabel('F')
             plt.ylabel('Profit of firm 1')
             plt.title('Profit of firm 1 as a function of F')
             plt.show()
 
-            
+    def demand(self,q_m,q_e):
 
+        """ demand function """
+
+        par = self.par
+
+        if q_m + q_e < par.d/par.b:
+            return par.d - par.b*(q_m + q_e)
+        else:
+            return 0       
+
+    def cost(self,q):
+
+        """ cost function """
+
+        par = self.par
+
+        return par.c*q + par.F 
+    
     def profit_e(self,q_m,q_e):
 
         """ profit function for the entrant firm """
 
-        par = self.par
-        return (par.a - par.b * (q_m + q_e)) * q_e - par.F
+        return self.demand(q_m,q_e) * q_e - self.cost(q_e)
+
 
     def profit_m(self,q_m): 
 
@@ -206,10 +233,11 @@ class EntryExitModel():
         par = self.par
         x_entrant = self.entrant_opt(q_m)
         if q_m < self.Y():
-            return (par.a - par.b * (q_m + x_entrant)) * q_m - par.F
+            return self.demand(q_m,x_entrant) * q_m - self.cost(q_m)
         else:
-            return (par.a - par.b * q_m) * q_m - par.F
+            return  self.demand(q_m,0) * q_m - self.cost(q_m)
         
+
     def entrant_opt(self,q_m): 
 
         """ optimal entrant quantity """
@@ -219,7 +247,7 @@ class EntryExitModel():
         def obj(q_e):
             return - self.profit_e(q_m,q_e)
         
-        sol = optimize.minimize(obj, x0=[1], bounds=[(0, par.a/par.b - q_m)], method="SLSQP", tol=1e-10)
+        sol =  sol = optimize.minimize(obj, x0=[1], bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_e: (par.d-par.c)/par.b - q_e + q_m}, method="SLSQP", tol=1e-10)
         optimal_q = sol.x[0]
         epsilon = 1e-1
         if self.profit_e(q_m,optimal_q) > epsilon:
@@ -233,7 +261,7 @@ class EntryExitModel():
         soll = optimize.root_scalar(obj, x0=[1], method='newton')
         return soll.root[0] 
     
-    def m_opt(self,multiple_start=False):
+    def m_opt(self,multiple_start=False,initial_condition_norandom=True,initial_condition_random=False):
 
         """ optimal quantity for the incumbent firm """
         
@@ -242,19 +270,25 @@ class EntryExitModel():
             return -self.profit_m(q_m)
         if multiple_start:
             np.random.seed(168)
-            x0s = np.random.uniform(0, par.a/par.b, 100)
+            x0s = np.random.uniform(0, (par.d-par.c)/par.b, 100)
             xs = np.empty(100)
             fs = np.empty(100)
             for i,x0 in enumerate(x0s):
-                sol = optimize.minimize(obj, x0=[x0], method='SLSQP', bounds=[(0, par.a/par.b)], tol=1e-10)
+                sol = optimize.minimize(obj, x0=[x0],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
                 xs[i] = sol.x[0]
                 fs[i] = -sol.fun
             optimal_q = xs[np.argmax(fs)]  
-        else:
-            sol = optimize.minimize(obj, x0=[self.Y()], method='SLSQP', bounds=[(0, par.a/par.b)], tol=1e-10)
+        elif initial_condition_norandom:
+            sol = optimize.minimize(obj, x0=[self.Y()],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
             optimal_q = sol.x[0] 
+        elif initial_condition_random:
+            np.random.seed(16)
+            x0 = np.random.uniform(0, (par.d-par.c)/par.b)
+            sol = optimize.minimize(obj, x0=[1],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
+            optimal_q = sol.x[0]
         print(f'Optimal quantity for the incumbent firm: {optimal_q}')
         print(f'Equilibium profit for the incumbent firm: {self.profit_m(optimal_q)}')
         print(f'Optimal quantity for the entrant firm: {self.entrant_opt(optimal_q)}')
-        print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,self.entrant_opt(optimal_q))}')
+        print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,self.entrant_opt(optimal_q))}') if self.entrant_opt(optimal_q) > 0 else print(f'Entrant does not enter in the market')
+        print(f'Y is equal to: {self.Y()}')
         return optimal_q, self.entrant_opt(optimal_q)
