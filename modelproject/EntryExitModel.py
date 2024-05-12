@@ -473,7 +473,5 @@ class EntryExitModel():
         optimal_q = sol.x[0] 
 
         print(f'Optimal quantity for the leader firm: {optimal_q}')
-        print(f'Equilibium profit for the leader firm: {self.profit_m_ext(optimal_q)}')
         print(f'Optimal quantity for the follower firm: {self.entrant_opt_ext(optimal_q)}')
-        print(f'Equilibium profit for the follower firm: {self.profit_e(optimal_q,self.entrant_opt_ext(optimal_q))}') if self.entrant_opt_ext(optimal_q) > 0 else print(f'Follower does not enter in the market')
         return optimal_q, self.entrant_opt_ext(optimal_q)
