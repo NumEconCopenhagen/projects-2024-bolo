@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 from types import SimpleNamespace
-
-
+import numba as nb
 
 
 class EntryExitModel():
@@ -20,19 +19,13 @@ class EntryExitModel():
 
     def setup(self):
         """ baseline parameters 
-        Args:
-        a: constant marginal cost
-        b: constant marginal revenue
-        c: constant variable cost
-        d: constant demand
-        F: constant fixed cost
         """
         par = self.par
         symbolic = self.symbolic
         par.b = 1
         par.F = 1
-        par.c = 2
-        par.d = 7
+        par.c = 0
+        par.d = 5
         par.a = par.d - par.c
 
         symbolic.a = sm.symbols('a')
@@ -45,6 +38,9 @@ class EntryExitModel():
             
         """ symbolic profit function for the entrant firm 
 
+        Args:
+        self: parameters
+
         Returns:
         profit_e: symbolic profit function for the entrant firm
         """
@@ -56,6 +52,9 @@ class EntryExitModel():
         
         """ second stage of the game 
 
+        Args:
+        self: parameters
+
         Returns:
         reaction_e[0]: reaction function for the entrant firm at the second stage
         profit_2nd_stage_e: profit for the entrant firm in the second stage
@@ -63,9 +62,12 @@ class EntryExitModel():
         """
         
         symbolic = self.symbolic
-   
-        profit_e = self.profit_e_sym()
+
+        #profit function for the entrant firm
+        profit_e = self.profit_e_sym() 
+        #reaction function for the entrant firm
         reaction_e = sm.solve(sm.diff(profit_e, symbolic.q_e),symbolic.q_e)
+        #threshold quantity of the incumbent firm for the entrant firm to enter the market
         profit_2nd_stage_e=sm.simplify(profit_e.subs(symbolic.q_e,reaction_e[0])) 
         Y = sm.solve(profit_2nd_stage_e,symbolic.q_m)[0]
             
@@ -75,6 +77,8 @@ class EntryExitModel():
 
         """ symbolic profit function for the incumbent firm 
 
+        Args:
+        self: parameters
 
         Returns:
         profit_m: symbolic profit function for the incumbent firm
@@ -91,6 +95,8 @@ class EntryExitModel():
 
         """ first stage of the game 
 
+        Args:
+        self: parameters
 
         Returns:
         profit_m: profit function for the incumbent firm
@@ -106,6 +112,8 @@ class EntryExitModel():
 
         symbolic = self.symbolic
         profit_m = self.profit_m_sym()
+
+        #incorporate the reaction function of the entrant firm into the profit function of the incumbent firm
         profit_m = profit_m.subs(symbolic.q_e,self.second_stage_of_the_game()[0])
         
         # optimal quantity for the incumbent firm when the entrant firm enters the market
@@ -132,6 +140,7 @@ class EntryExitModel():
 
         #entry is accommodated under these conditions:
         accomodation_condition = sm.And(sm.Lt(0, symbolic.F),sm.Gt((3- 2*sm.sqrt(2))*symbolic.a**2/(32*symbolic.b), symbolic.F))
+        
         #the profit when the entry is accomodated is:
         acc_profit = sm.simplify(expr2.subs(symbolic.q_m, self.second_stage_of_the_game()[2]))
 
@@ -141,9 +150,11 @@ class EntryExitModel():
 
         """ This method is just for graphical purposes
 
+        Args:
+        self: parameters
 
         Returns:
-        profit_m_inverse: profit function for the incumbent firm with inverted condition 
+        profit_m_inverse: profit function for the incumbent firm with inverted condition needed to do the dot line in the graph
         """
 
         symbolic = self.symbolic
@@ -159,6 +170,8 @@ class EntryExitModel():
 
         """ plot the profit function for the incumbent firm 
 
+        Args:
+        self: parameters
         
         Returns:    
         plot: plot of the profit function for the incumbent firm
@@ -174,19 +187,21 @@ class EntryExitModel():
         for i, F_val in enumerate(F_vals, 1):
             profit_m, profit_m_e, profit_m_ne, block_condition, deterred_condition, accomodation_condition, acc_profit ,crit_points1, crit_points2= self.first_stage_of_the_game(do_print=False)
             Y = self.second_stage_of_the_game()[2]
-            # Convert the symbolic expression into a numerical function
 
+            # Convert the symbolic expression into a numerical function
             profit_m_e_func =sm.lambdify(symbolic.q_m, profit_m.subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}))
             profit_m_e_func_inverse= sm.lambdify(symbolic.q_m, self.profit_m_inverse().subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}))
             q_m_func = sm.lambdify(symbolic.q_m, symbolic.q_m.subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}))
-
             Y_val = Y.subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val})
+            
             # Generate the corresponding y-values
             profit_values = profit_m_e_func(q_m_func(q_m_values))
             profit_values_1 = profit_m_e_func_inverse(q_m_func(q_m_values))
             
             # Create the subplot
             plt.subplot(1, 3, i)  # 1 row, 3 columns, i-th plot
+
+            # Plot the profit function
             plt.plot(q_m_values, profit_values, color="black")
             plt.plot(q_m_values, profit_values_1, color="black", linestyle='--')
 
@@ -195,6 +210,8 @@ class EntryExitModel():
             crit_points_values_1 = [cp.evalf(subs={symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}) for cp in crit_points2]
             profit_at_crit_points = [profit_m_e_func(cp) for cp in crit_points_values]
             profit_at_crit_points_1 = [profit_m_e_func(Y_val) for cp in crit_points_values_1]
+
+            # Plot the critical points
             plt.scatter(crit_points_values, profit_at_crit_points, color='red', label='Monopoly profit')
             plt.scatter(Y_val, profit_m_e_func(Y_val), color='green', label='Y')
 
@@ -206,7 +223,7 @@ class EntryExitModel():
             plt.ylabel('profit_m_e')
             plt.title(f'Profit as a function of the quantity of firm m (F={F_val})')
             if i == 1:
-                plt.annotate(f'E does not enter', xy=(Y_val, profit_m_e_func(Y_val)), xytext=(Y_val, profit_m_e_func(Y_val)  + 0.5), 
+                plt.annotate(f'E does enter', xy=(Y_val, profit_m_e_func(Y_val)), xytext=(Y_val, profit_m_e_func(Y_val)  + 0.5), 
                 ha='left', va='bottom', bbox=dict(boxstyle='square', pad=0.003, facecolor='lightblue'));
             elif i ==2:
                  plt.annotate(f'E does not enter', xy=(Y_val, profit_m_e_func(Y_val)), xytext=(Y_val, profit_m_e_func(Y_val)  + 0.01), 
@@ -220,6 +237,9 @@ class EntryExitModel():
     def plot_profit_m_2(self):
             
             """ Firm M's equilibrium profit as a function of F
+
+            Args:
+            self: parameters
 
             Returns:
             plot: a plot of the equilibrium profit of the incumbent firm as a function of F.
@@ -239,12 +259,15 @@ class EntryExitModel():
             #The following part is just for graphical purposes without economic reasoning 
             first_profit_lam = sm.lambdify((symbolic.F), profit_m_e.subs({symbolic.a: par.a, symbolic.b: par.b}))
             last_profit_lam = sm.lambdify((symbolic.F), profit_m_ne.subs({symbolic.a: par.a, symbolic.b: par.b}))
+
+            # Create the figure
             F = np.linspace(0,(par.a**2)/(16*par.b)+0.4, 100000)
             profit_values = profit_of_firm_1_lam(F)
             first_profit_values = first_profit_lam(F)
             last_profit_values = last_profit_lam(F)
             plt.plot(F, profit_values,color="black")
             plt.plot(F, first_profit_values, color= "black", linestyle='--')    
+            ##add text to the plot
             mask1 = (F > 0.14) & (F < 1.30)
             mask2 = (F > 1.30) & (F < 2)
             mask3 = (F > 0) & (F < 0.14)
@@ -289,7 +312,6 @@ class EntryExitModel():
         Args:
         self: parameters
         q: quantity
-        F: fixed cost
 
         Returns:
         cost: cost function
@@ -315,25 +337,26 @@ class EntryExitModel():
         return self.demand(q_m,q_e) * q_e - self.cost(q_e)
 
 
-    def profit_m(self,q_m): 
+    def profit_m(self,q_m):
 
         """ profit function for the incumbent firm 
 
         Args:
         q_m: quantity of the incumbent firm
-        
+        self: parameters
 
         Returns:
         profit: profit function for the incumbent firm
         """
 
         par = self.par
+        
         x_entrant = self.entrant_opt(q_m)
         if q_m < self.Y():
             return self.demand(q_m,x_entrant) * q_m - self.cost(q_m)
         else:
             return  self.demand(q_m,0) * q_m - self.cost(q_m)
-        
+            
 
     def entrant_opt(self,q_m): 
 
@@ -352,9 +375,11 @@ class EntryExitModel():
         def obj(q_e):
             return - self.profit_e(q_m,q_e)
         
-        sol =  sol = optimize.minimize(obj, x0=[1], bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_e: (par.d-par.c)/par.b - q_e + q_m}, method="SLSQP", tol=1e-10)
+        sol =  sol = optimize.minimize(obj, x0=[0.2], bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_e: (par.d-par.c)/par.b - q_e + q_m}, method="SLSQP", tol=1e-10)
         optimal_q = sol.x[0]
-        epsilon = 1e-1
+
+        #I put epsilon instead of 0 because of the numerical error
+        epsilon = 1e-8
         if self.profit_e(q_m,optimal_q) > epsilon:
             return sol.x[0]
         else:
@@ -371,10 +396,11 @@ class EntryExitModel():
         soll.root[0]: threshold quantity of the incumbent firm for the entrant firm to enter the market""" 
         def obj(q_m):
             return -self.profit_e(q_m,self.entrant_opt(q_m))
-        soll = optimize.root_scalar(obj, x0=[1], method='newton')
+        soll = optimize.root_scalar(obj, x0=[2.8], method='newton')
         return soll.root[0] 
     
-    def m_opt(self,multiple_start=False,initial_condition_norandom=True,initial_condition_random=False):
+    
+    def m_opt(self,multiple_start=False,initial_condition_norandom=True,initial_condition_random=False,do_print=True):
 
         """ Optimal quantity for the incumbent firm
 
@@ -386,35 +412,99 @@ class EntryExitModel():
 
         Returns:
         optimal_q: optimal quantity for the incumbent firm
-        entrant_opt(optimal_q): optimal quantity for the entrant firm
+        q2: optimal quantity for the entrant firm
         """
         
         par = self.par
+        
         def obj(q_m):
             return -self.profit_m(q_m)
+        
         if multiple_start:
             np.random.seed(168)
-            x0s = np.random.uniform(0, (par.d-par.c)/par.b, 100)
-            xs = np.empty(100)
-            fs = np.empty(100)
+            x0s = np.random.uniform(0, (par.d-par.c)/par.b, 50)
+            xs = np.empty(50)
+            fs = np.empty(50)
             for i,x0 in enumerate(x0s):
-                sol = optimize.minimize(obj, x0=[x0],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
+                sol = optimize.minimize(obj, x0=[x0],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b -  self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
                 xs[i] = sol.x[0]
                 fs[i] = -sol.fun
             optimal_q = xs[np.argmax(fs)]  
         elif initial_condition_norandom:
-            sol = optimize.minimize(obj, x0=[self.Y()],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
+            sol = optimize.minimize(obj, x0=[self.Y()],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b -  self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
+
             optimal_q = sol.x[0] 
         elif initial_condition_random:
             np.random.seed(16)
             x0 = np.random.uniform(0, (par.d-par.c)/par.b)
-            sol = optimize.minimize(obj, x0=[1],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b - self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
+            sol = optimize.minimize(obj, x0=[1],bounds=[(0, (par.d-par.c)/par.b)],constraints={'type':'ineq', 'fun': lambda q_m: (par.d-par.c)/par.b -  self.entrant_opt(q_m) + q_m},method='SLSQP', tol=1e-10)
             optimal_q = sol.x[0]
-        print(f'Optimal quantity for the incumbent firm: {optimal_q}')
-        print(f'Equilibium profit for the incumbent firm: {self.profit_m(optimal_q)}')
-        print(f'Optimal quantity for the entrant firm: {self.entrant_opt(optimal_q)}')
-        print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,self.entrant_opt(optimal_q))}') if self.entrant_opt(optimal_q) > 0 else print(f'Entrant does not enter in the market')
-        return optimal_q, self.entrant_opt(optimal_q)
+        
+        q2 = self.entrant_opt(optimal_q)
+
+        if do_print:
+            print(f'Optimal quantity for the incumbent firm: {optimal_q}')
+            print(f'Equilibium profit for the incumbent firm: {self.profit_m(optimal_q)}')
+            print(f'Optimal quantity for the entrant firm: {q2}') 
+            print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,q2)}')
+        return optimal_q, q2
+
+
+    def plot_numerical_solution(self):
+
+        """ plot the numerical solution of the model to see the equilibrium quantities and profits
+
+        Args:
+        self: parameters
+        
+        Returns:
+        plot: plot of the numerical solution of the model
+        """
+
+        par = self.par
+
+        # Create a grid of F values
+        Fs = np.linspace(0,2, 20)
+
+        
+        # Initialize lists to store the results
+        q_m = []
+        q_e = []
+        profit_m = []
+
+        for F in Fs:
+
+            # Update the parameter F in the model
+            par.F = F
+            # Obtain the optimized values
+            opt_values = self.m_opt(do_print=False)
+            # Append the results to the respective lists
+            q_m.append(opt_values[0])
+            q_e.append(opt_values[1])
+            profit_m.append(self.profit_m(opt_values[0]))
+
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))  # Create a new figure with 1 row and 2 columns
+        # Plot profit_m against F on the first subplot
+        axs[0].plot(Fs, profit_m)
+        axs[0].set_xlabel('F')
+        axs[0].set_ylim(1,6.5) 
+        axs[0].set_ylabel('Profit of M')
+        axs[0].set_title('Profit of M as a function of F')
+        axs[0].grid(True)
+
+        # Plot q_m and q_e against F on the second subplot
+        axs[1].plot(Fs, q_m, label='M')
+        axs[1].plot(Fs, q_e, label='E')
+        axs[1].set_xlabel('F')
+        axs[1].set_ylabel('Quantity')
+        axs[1].set_title('Quantity M, E as a function of F')
+        axs[1].grid(True)
+        axs[1].legend()
+
+        plt.tight_layout()  # Adjust the layout so that plots do not overlap
+        plt.show()  # Display the plots
+        
+     
 
 
     def profit_m_ext(self,q_m): 

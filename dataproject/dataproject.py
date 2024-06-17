@@ -3,12 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
 import plotly.graph_objects as go
-import glob
 # user written modules
 from pandas_datareader import wb
 import seaborn as sns
 import plotly.graph_objs as go
 from plotly.offline import iplot
+import matplotlib.ticker as ticker
 
 
 class dataproject:
@@ -26,7 +26,7 @@ class dataproject:
         self.data_2020 = pd.read_csv('Data/Resident_population_2020.csv')
         self.data_2021 = pd.read_csv('Data/Resident_population_2021.csv')
         self.regional_fertility = pd.read_csv('Data/Fertility.csv')
-
+        self.pop_projection = pd.read_csv('Data/Population Projection.csv')
         
     def merge(self):
 
@@ -35,6 +35,9 @@ class dataproject:
         Description:
         The function merges the data from self.data_til01 and self.data_til21 using an outer join, 
         ensuring integrity by validating that the keys are unique in both data frames (a one-to-one relationship).
+
+        Args: 
+        self: datasets
 
         Returns:
     
@@ -50,6 +53,9 @@ class dataproject:
         Description:
         The function cleans the data from the merged data frame. It renames the columns to have the same name for each year 
         It reshapes the data to have the variable 'year' and two new variables: male and female.
+
+        Args: 
+        self: datasets
 
         Returns:
     
@@ -85,6 +91,9 @@ class dataproject:
         Description:
         The `concat` function concatenates multiple datasets and performs some data cleaning operations. 
         
+        Args: 
+        self: datasets
+
         Returns:
     
         pop_italy: a single cleaned data frame with the concatenated data from data_2020 and data_2021
@@ -118,6 +127,9 @@ class dataproject:
         The function filters observations, standardises age labels, converts data types, sorts the dataset by 'year' and 'Age',
         creates a new variable with age groups, aggregates population data by age group and year.
         
+        Args: 
+        self: datasets
+
         Returns:
     
         pop_italy_agg: aggregated and reshaped dataset containing population information by age group and year.
@@ -163,7 +175,71 @@ class dataproject:
 
 
         return pop_italy_agg
- 
+    
+    def birth_expectancy(self):
+
+        """
+        Birth and life expectancy function:
+
+        Description:
+        The function downloads data from the World Bank API and 
+        merges the data to obtain a single data frame with the birth rate 
+        and life expectancy for Italy from 1992 to 2021.
+
+        Args: 
+        self: datasets
+
+        Returns:
+        merged_df: a single data frame with the birth rate and life expectancy for Italy from 1992 to 2021.
+
+        """
+        # Download data from the World Bank API
+        wb_fr = wb.download(indicator='SP.DYN.LE00.IN', country=['IT'], start=1992, end=2021)
+        wb_fr.reset_index(inplace=True)
+        wb_fr.rename(columns={'SP.DYN.LE00.IN': 'life_expectancy'}, inplace=True)
+        wb_fr['year'] = wb_fr['year'].astype(int)
+        wb_birth = wb.download(indicator='SP.DYN.CBRT.IN', country=['IT'], start=1992, end=2021)
+        wb_birth.reset_index(inplace=True)
+        wb_birth.rename(columns={'SP.DYN.CBRT.IN': 'birth_rate'}, inplace=True)
+        wb_birth['year'] = wb_birth['year'].astype(int)
+        #merge the two dataframes
+        merged_df = pd.merge(wb_fr, wb_birth, how='outer',on='year')
+        return merged_df
+    
+    def plot_birth_expectancy(self):
+
+        '''Plot birth expectancy function:
+
+        Description:
+        This function plots the life expectancy and birth rate in Italy from 1992 to 2021.
+
+        Args: 
+        self: datasets
+
+        Returns:
+        A plot showing the life expectancy and birth rate in Italy from 1992 to 2021.
+        '''
+
+        merged_df = self.birth_expectancy()
+        # Creating a figure and axis object
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+
+        # Plotting life expectancy on primary y-axis
+        ax1.plot(merged_df['year'], merged_df['life_expectancy'], color='blue', label='Life Expectancy')
+        ax1.set_ylabel('Life Expectancy', color='black')
+
+        # Creating a secondary y-axis for birth rate
+        ax2 = ax1.twinx()
+        ax2.plot(merged_df['year'], merged_df['birth_rate'], color='orange', label='Birth Rate')
+        ax2.set_ylabel('Birth Rate', color='black')
+
+        # Adding title and legend
+        plt.title('Life Expectancy and Birth Rate in Italy')
+        fig.tight_layout()
+        fig.legend(loc='upper left', bbox_to_anchor=(0.24, 0.92))                                 
+        plt.show()
+
+
     def insert_dot(self, value):
         '''Insert dot function:
 
@@ -174,6 +250,7 @@ class dataproject:
         Args:
 
         value: the column to be converted
+        self: datasets
 
         Returns:
 
@@ -191,6 +268,9 @@ class dataproject:
         Description:
 
         The function keeps only variables of interest, It applies the function 'insert_dot' to the 'Total fertility rate' column and renames the columns.
+
+        Args: 
+        self: datasets
 
         Returns:
 
@@ -217,9 +297,8 @@ class dataproject:
 
         This function generates an interactive choropleth map visualizing the total fertility rate (TFR) in Italian regions over the years 1992 to 2021.
 
-        Args:
-
-        regional_fertility: data frame with the fertility rate for each region
+        Args: 
+        self: datasets
 
         Returns:
         
@@ -283,3 +362,30 @@ class dataproject:
 
         choromap2 = go.Figure(data=data_slider, layout=layout)
         return iplot(choromap2, validate=False)
+
+    def plot_population_forecast(self):
+
+        '''Plot population forecast function:
+
+        Description:
+        This function plots the population forecast in Italy from 2020 to 2100.
+
+        Args: 
+        self: datasets
+        
+        Returns:
+        A plot showing the population forecast in Italy from 2020 to 2100.
+        '''
+        # setting up forecast plot
+        ax = self.pop_projection.plot('Year', 'Median scenario', kind='line', legend=True, title='Population Projection',color='lightsteelblue')
+        # labels:
+        plt.xlabel('Year')
+        plt.ylabel('Population')
+
+        # Change y-axis to display as real numbers
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
+
+        plt.style.use('seaborn-v0_8')
+
+        # Show plot
+        plt.show()

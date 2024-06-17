@@ -1,4 +1,4 @@
-# \[Group name\]
+# \[Bolo\]
 
 **Group members:**
 - Iari Orlandi
