@@ -171,9 +171,61 @@ class ExchangeEconomyClass:
         eps2 = x2A-par.w2A + x2B-(1-par.w2A)
 
         return eps1,eps2,p1
+    
+    def market_clearing_price_discrete(self):
+        '''This function finds the market clearing price and the relative demand for x1 and x2 for agent A.
+
+        Returns:
+            p1_optimal (float): Market clearing price of good 1.
+            demand1_A (float): Demand for good 1 by agent A at the optimal price.
+            demand2_A (float): Demand for good 2 by agent A at the optimal price.
+            utility_A (float): Utility of agent A at the optimal price.
+        '''
+        # a. Set up: predefined parameters are recalled, initial guess for the market clearing price is specified, the objective function is defined
+        par = self.par
+        p_initial = 0.5
+        
+        # Define the objective function
+        def obj1(p1):
+            x1A, _ = self.demand_A(p1)
+            x1B, _ = self.demand_B(p1)
+            eps1 = x1A - par.w1A + x1B - (1 - par.w1A)
+            return np.sum(eps1**2)  # Return the sum of squared errors as a scalar
+        
+        # b. Optimization: function root from scipy optimization module uses an iterative algorithm to refine the initial guess until it converges
+        result = optimize.root(obj1, p_initial)
+        p1_optimal = result.x[0]
+        
+        # c. Results: optimal values of target variables are returned
+        demand1_A = self.demand_A(p1_optimal)[0]
+        demand2_A = self.demand_A(p1_optimal)[1]
+        utility_A = self.utility_function_A(demand1_A, demand2_A)
+        
+        return p1_optimal, demand1_A, demand2_A, utility_A
+
+    def compute_excess_demand_at_optimal(self):
+        '''This function computes the excess demand at the optimal market clearing price.
+
+        Returns:
+            eps1_optimal (float): Error in market clearing condition for good 1 at optimal price.
+            eps2_optimal (float): Error in market clearing condition for good 2 at optimal price.
+        '''
+        # Get the optimal price
+        p1_optimal, _, _, _ = self.market_clearing_price_discrete()
+        
+        # Compute demands at the optimal price
+        x1A, x2A = self.demand_A(p1_optimal)
+        x1B, x2B = self.demand_B(p1_optimal)
+        
+        # Compute errors in market clearing conditions at the optimal price
+        eps1_optimal = x1A - self.par.w1A + x1B - (1 - self.par.w1A)
+        eps2_optimal = x2A - self.par.w2A + x2B - (1 - self.par.w2A)
+        
+        return eps1_optimal, eps2_optimal
+
 
     #Question 3
-    def market_clearing_price(self):
+    def market_clearing_price_continuous(self):
 
         '''This function finds the market clearing price and the relative demand for x1 and x2 for agent A.
 
@@ -194,9 +246,11 @@ class ExchangeEconomyClass:
         par = self.par
         p_initial = 0.5
         obj1 = lambda p1: (self.demand_A(p1[0])[0] -par.w1A + self.demand_B(p1[0])[0] - (1-par.w1A))
+
     #b. Optimization: function root from scipy optimization module uses an iterative algorithm to refine the initial guess until it converges
         result = optimize.root(obj1, p_initial)
         p1_optimal = result.x[0]
+
     #c. Results: optimal values of target variables are returned
         return p1_optimal, self.demand_A(p1_optimal)[0],self.demand_A(p1_optimal)[1],self.utility_function_A(self.demand_A(p1_optimal)[0],self.demand_A(p1_optimal)[1])
     
