@@ -1,9 +1,9 @@
 # Bolo
 
 **Group members:**
-- Iari Orlandi
-- Vittoria Ricci
-- Maja Hundsdahl
+- Iari Orlandi mhs354
+- Vittoria Ricci wrv891
+- Maja Hundsdahl tfx391
 
 
 This repository contains:  
