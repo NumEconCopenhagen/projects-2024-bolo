@@ -79,7 +79,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        self
+        self: parameters of the model and functions defined in the class
         p1: price of good 1 
         w1A: initial endowment of good 1 held by agent A
         w2A: initial endowment of good 2 held by agent A
@@ -98,7 +98,7 @@ class ExchangeEconomyClass:
 
         Args: 
         
-        self
+        self: parameters of the model and functions defined in the class    
          
         Returns:
     
@@ -130,7 +130,7 @@ class ExchangeEconomyClass:
 
             Args: 
             
-            self
+            self: parameters of the model and functions defined in the class
 
             Returns:
 
@@ -180,7 +180,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
     
@@ -210,7 +210,7 @@ class ExchangeEconomyClass:
         
         Args: 
         
-        self
+        self: parameters of the model and functions defined in the class
         
         Returns:
         
@@ -240,7 +240,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        self 
+        self : parameters of the model and functions defined in the class
 
         Returns:
     
@@ -262,7 +262,7 @@ class ExchangeEconomyClass:
         
         Args:
         
-        self
+        self: parameters of the model and functions defined in the class
         
         Returns:
         
@@ -295,7 +295,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
     
@@ -334,7 +334,7 @@ class ExchangeEconomyClass:
 
         Args:
 
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
 
@@ -358,7 +358,7 @@ class ExchangeEconomyClass:
         
         Args:
     
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
     
@@ -368,13 +368,21 @@ class ExchangeEconomyClass:
 
         # a. Set up: the objective function is defined
         def obj(p1):
-            x1 =1- self.demand_B(p1)[0]
-            x2 =1- self.demand_B(p1)[1]
-            return -self.utility_function_A(x1,x2)
+            x1 = 1 - self.demand_B(p1)[0]
+            x2 = 1 - self.demand_B(p1)[1]
+            return -self.utility_function_A(x1, x2)
 
-        #b. Optimization:'minimize_scalar' function from 'optimize' module in scipy is employed to minimize 'obj', a scalar function of one variable
-        result = optimize.minimize_scalar(obj,bracket=(0.6,2.5)) #Braket argument specifies function obj has a minimum between the two specified boundaries
-        p1_optimal = result.x 
+        # Define the constraints
+        constraints = ({'type': 'ineq', 'fun': lambda p1: p1})
+
+        # Initial guess
+        x0 = [0.7]
+
+        # b. Optimization: 'minimize' function from 'optimize' module in scipy is employed to minimize 'obj', a scalar function of one variable
+        result = optimize.minimize(obj, x0, constraints=constraints, method='SLSQP')
+
+        # Optimal value of p1
+        p1_optimal = result.x[0]
 
         #c. Results are called
         return p1_optimal,(1- self.demand_B(p1_optimal)[0]),(1-self.demand_B(p1_optimal)[1]),self.utility_function_A(1- self.demand_B(p1_optimal)[0],(1- self.demand_B(p1_optimal)[1]))
@@ -386,7 +394,7 @@ class ExchangeEconomyClass:
         
         Args:
     
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
     
@@ -413,7 +421,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
     
@@ -436,7 +444,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        self
+        self:   parameters of the model and functions defined in the class
 
         Returns:
     
@@ -461,7 +469,7 @@ class ExchangeEconomyClass:
         
         Args: 
         
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
 
@@ -531,7 +539,7 @@ class ExchangeEconomyClass:
         
         Args: 
         
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
     
@@ -570,7 +578,7 @@ class ExchangeEconomyClass:
 
         Args: 
         
-        self
+        self: parameters of the model and functions defined in the class
 
         Returns:
 
