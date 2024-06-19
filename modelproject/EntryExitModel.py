@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 from types import SimpleNamespace
 import numba as nb
-from matplotlib.patches import FancyArrowPatch
-from matplotlib.patches import FancyArrowPatch
-from ipywidgets import interact, widgets  # Import interact and widgets from ipywidgets
 
 
 class EntryExitModel():
@@ -225,100 +222,13 @@ class EntryExitModel():
             plt.xlabel('q_m')
             plt.ylabel('profit_m_e')
             plt.title(f'Profit as a function of the quantity of firm m (F={F_val})')
-            if i == 1:
-                plt.annotate(f'E does enter', xy=(Y_val, profit_m_e_func(Y_val)), xytext=(Y_val, profit_m_e_func(Y_val)  + 0.5), 
-                ha='left', va='bottom', bbox=dict(boxstyle='square', pad=0.003, facecolor='lightblue'));
-            elif i ==2:
-                 plt.annotate(f'E does not enter', xy=(Y_val, profit_m_e_func(Y_val)), xytext=(Y_val, profit_m_e_func(Y_val)  + 0.01), 
-                ha='left', va='bottom', bbox=dict(boxstyle='square', pad=0.003, facecolor='lightblue'));
-            elif i ==3:
-                 plt.annotate(f'E does not enter', xy=(Y_val, profit_m_e_func(Y_val)), xytext=(Y_val, profit_m_e_func(Y_val)  - 1.5), 
-                ha='left', va='bottom', bbox=dict(boxstyle='square', pad=0.003, facecolor='lightblue'));
-            plt.tight_layout()
-        plt.show()
-
-    def plot_profit_m_interactive(self):
-
-        """ plot the profit function for the incumbent firm in an interactive way
-
-        Args:
-        symbolic: symbolic variables
-        par: parameters
-        F_vals: list of F values
-        q_m_values: quantity of the incumbent firm
-        crit_points1: critical points for the incumbent firm when the entrant firm enters the market
-        crit_points2: critical points for the incumbent firm when the entrant firm does not enter the market
-        profit_m_e_func: profit function for the incumbent firm when the entrant firm enters the market
-        profit_m_e_func_inverse: profit function for the incumbent firm when the entrant firm does not enter the market
-        Y: threshold quantity of the incumbent firm for the entrant firm to enter the market
-        profit_values: profit values for the incumbent firm when the entrant firm enters the market
-        profit_values_1: profit values for the incumbent firm when the entrant firm does not enter the market
-        max_index: index of the maximum value
-        max_x: x value of the maximum value
-        max_y: y value of the maximum value
-        
-        Returns:    
-        plot: plot of the profit function for the incumbent firm
-        """
-
-        symbolic = self.symbolic
-        par = self.par
-        F_vals = np.linspace(0.01, 2.5, 100)  # Generate a range of F values
-
-        q_m_values = np.linspace(0, par.a/par.b, 10000)
-
-        # Create the figure
-        plt.figure(figsize=(15, 5)) 
-
-        def update_plot(F_val):
-            plt.clf()  # Clear the current figure
-            profit_m, profit_m_e, profit_m_ne, block_condition, deterred_condition, accomodation_condition, acc_profit, crit_points1, crit_points2 = self.first_stage_of_the_game(do_print=False)
-            Y = self.second_stage_of_the_game()[2]
-
-            profit_m_e_func =sm.lambdify(symbolic.q_m, profit_m.subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}))
-            profit_m_e_func_inverse= sm.lambdify(symbolic.q_m, self.profit_m_inverse().subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}))
-            q_m_func = sm.lambdify(symbolic.q_m, symbolic.q_m.subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}))
-
-            Y_val = Y.subs({symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val})
-            # Generate the corresponding y-values
-            profit_values = profit_m_e_func(q_m_func(q_m_values))
-            profit_values_1 = profit_m_e_func_inverse(q_m_func(q_m_values))
-            
-            # Create the subplot
-            plt.plot(q_m_values, profit_values, color="black")
-            plt.plot(q_m_values, profit_values_1, color="black", linestyle='--')
-
-            # Evaluate the critical points values
-            crit_points_values = [cp.evalf(subs={symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}) for cp in crit_points1]
-            crit_points_values_1 = [cp.evalf(subs={symbolic.a: par.a, symbolic.b: par.b, symbolic.F: F_val}) for cp in crit_points2]
-            profit_at_crit_points = [profit_m_e_func(cp) for cp in crit_points_values]
-            profit_at_crit_points_1 = [profit_m_e_func(Y_val) for cp in crit_points_values_1]
-            plt.scatter(crit_points_values, profit_at_crit_points, color='red', label='Monopoly profit')
-            plt.scatter(Y_val, profit_m_e_func(Y_val), color='green', label='Y')
-
-            # Add vertical lines
-            plt.axvspan(q_m_values[0], Y_val, ymin=0, ymax=1, color='lightblue', alpha=0.5)
-
-            # Add labels
-            plt.xlabel('q_m')
-            plt.ylabel('profit_m_e')
-            plt.title(f'Profit as a function of the quantity of firm m (F={F_val})')
-            max_index = np.argmax([max(profit_at_crit_points), max(profit_at_crit_points)])
-            max_x = max(crit_points_values[max_index], crit_points_values_1[max_index])
-            max_y = max(profit_at_crit_points[max_index], profit_at_crit_points_1[max_index])
-            plt.annotate(f'Global maximum: {max_y:.2f}', xy=(max_x, max_y), xytext=(max_x - 1, max_y - 1),
-             arrowprops=dict(facecolor='red', shrink=0.05));
             plt.annotate(f'Entrant does not enter', 
              xy=(Y_val, profit_m_e_func(Y_val)), 
              xytext=(Y_val + 1, profit_m_e_func(Y_val)),
              ha='left', va='center',
-             arrowprops=dict(arrowstyle='<-', lw=1))
-
+                arrowprops=dict(arrowstyle='<-', lw=1))
             plt.tight_layout()
         plt.show()
-        interact(update_plot, F_val=widgets.FloatSlider(min=0.01, max=2.5, step=0.01, value=0.01, description='F value:'))
-
-
 
     def plot_profit_m_2(self):
             
