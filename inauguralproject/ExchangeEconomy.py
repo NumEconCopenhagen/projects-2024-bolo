@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 class ExchangeEconomyClass:
 
     def __init__(self,**kwargs):
-
         par = self.par = SimpleNamespace()
 
         # a. preferences
@@ -29,9 +28,9 @@ class ExchangeEconomyClass:
 
         Args:
     
+        self
         x1a (float between 0 and 1): demand of good 1 by agent A
         x2a (float between 0 and 1): demand of good 2 by agent A
-        alpha (float between 0 and 1): preference parameter of agent A: the higher, the greater agent's liking of good 1
         
         Returns:
     
@@ -46,9 +45,9 @@ class ExchangeEconomyClass:
 
         Args:
     
-        x1a (float between 0 and 1): demand of good 1 by agent B
-        x2a (float between 0 and 1): demand of good 2 by agent B
-        beta (float between 0 and 1): preference parameter of agent B: the higher, the greater agent's liking of good 1
+        self
+        x1b (float between 0 and 1): demand of good 1 by agent B
+        x2b (float between 0 and 1): demand of good 2 by agent B
         
         Returns:
     
@@ -63,13 +62,10 @@ class ExchangeEconomyClass:
 
         Args:
     
+        self 
         p1: price of good 1 
-        p2: price of good 2
-        w1a: initial endowment of good 1 held by agent A
-        w2a: initial endowment of good 2 held by agent A
-        x1a (float between 0 and 1): demand of good 1 by agent A
-        x2a (float between 0 and 1): demand of good 2 by agent A
-        alpha (float between 0 and 1): preference parameter of agent A: the higher, the greater agent's liking of good 1
+        w1A: initial endowment of good 1 held by agent A
+        w2A: initial endowment of good 2 held by agent A
         
         Returns:
     
@@ -81,19 +77,16 @@ class ExchangeEconomyClass:
 
         '''This function finds the demand for x1 and x2 for agent B.
 
-         Args:
+        Args:
     
+        self
         p1: price of good 1 
-        p2: price of good 2
-        w1a: initial endowment of good 1 held by agent A
-        w2a: initial endowment of good 2 held by agent A
-        x1a (float between 0 and 1): demand of good 1 by agent A
-        x2a (float between 0 and 1): demand of good 2 by agent A
-        alpha (float between 0 and 1): preference parameter of agent A: the higher, the greater agent's liking of good 1
-        
+        w1A: initial endowment of good 1 held by agent A
+        w2A: initial endowment of good 2 held by agent A
+
         Returns:
     
-        demand_A (float): demand of agent A 
+        demand_B (float): demand of agent B 
         '''
 
         return self.par.beta*(p1* (1-w1A) + self.par.p2* (1-w2A))/p1,(1-self.par.beta)*(p1* (1-w1A) + self.par.p2*(1-w2A))/self.par.p2
@@ -103,18 +96,13 @@ class ExchangeEconomyClass:
        
         '''This function finds the pareto optimal allocations of x1 and x2 for agent A
 
-         Args:
-    
-        utility_function_A: utility function of agent A
-        utility_function_B: utility function of agent B
-        x1a (float between 0 and 1): demand of good 1 by agent A
-        x2a (float between 0 and 1): demand of good 2 by agent A
-        alpha (float between 0 and 1): preference parameter of agent A: the higher, the greater agent's liking of good 1
-    
-
+        Args: 
+        
+        self
+         
         Returns:
     
-        pareto_opt_allocations (float): pareto optimal allocations of good 1 and 2 for agent A
+        x1a_optimal (float): optimal allocation of good 1 for agent A
         '''
     #a.Set up: predefined parameters are recalled and variables to store optimal parameters are created
         par = self.par
@@ -136,6 +124,55 @@ class ExchangeEconomyClass:
         #iii. return optimal values
         return x1a_optimal,x2a_optimal
 
+    def plot_allocation_diagram(self):
+
+        '''This function plots the allocation diagram for agent A and B.
+
+            Args: 
+            
+            self
+
+            Returns:
+
+            Allocation diagram for agent A and B
+            '''
+
+        par = self.par
+        w1bar = 1.0
+        w2bar = 1.0
+        
+        fig = plt.figure(frameon=True, figsize=(6, 6), dpi=100)
+        ax_A = fig.add_subplot(1, 1, 1)
+
+        ax_A.set_xlabel("$x_1^A$")
+        ax_A.set_ylabel("$x_2^A$")
+
+        temp = ax_A.twinx()
+        temp.set_ylabel("$x_2^B$")
+        ax_B = temp.twiny()
+        ax_B.set_xlabel("$x_1^B$")
+        ax_B.invert_xaxis()
+        ax_B.invert_yaxis()
+
+        ax_A.scatter(par.w1A, par.w2A, marker='s', color='r', label='Endowment')
+        
+        x1a_pareto_optimal, x2a_pareto_optimal = self.pareto_opt_allocations()
+        ax_A.scatter(x1a_pareto_optimal, x2a_pareto_optimal, marker='s', color='lightskyblue', label='Pareto Optimal')
+
+        ax_A.plot([0, w1bar], [0, 0], lw=2, color='black')
+        ax_A.plot([0, w1bar], [w2bar, w2bar], lw=2, color='black')
+        ax_A.plot([0, 0], [0, w2bar], lw=2, color='black')
+        ax_A.plot([w1bar, w1bar], [0, w2bar], lw=2, color='black')
+
+        ax_A.set_xlim([-0.1, w1bar + 0.1])
+        ax_A.set_ylim([-0.1, w2bar + 0.1])    
+        ax_B.set_xlim([w1bar + 0.1, -0.1])
+        ax_B.set_ylim([w2bar + 0.1, -0.1])
+
+        ax_A.legend(frameon=True, loc='upper right', bbox_to_anchor=(1.6, 1.0))
+        
+        plt.show()
+
     #Question 2
     def check_market_clearing(self):
 
@@ -143,17 +180,13 @@ class ExchangeEconomyClass:
 
         Args:
     
-        p1: price of good 1 
-        p2: price of good 2
-        demand_A: demand function of agent A
-        demand_B: demand function of agent B
-        w1A (float between 0 and 1): endowment of good 1 held by agent A
-        w2A (float between 0 and 1): endowment of good 2 held by agent A
+        self
 
         Returns:
     
-        demand_A (float): demand of agent A 
+        eps1, eps2, p1 (float): errors in the market clearing conditions for both goods
         '''
+
     #a. Set up: predefined parameters are recalled and target variable is created as an empty list
         par = self.par
         p1 = []
@@ -171,72 +204,43 @@ class ExchangeEconomyClass:
         eps2 = x2A-par.w2A + x2B-(1-par.w2A)
 
         return eps1,eps2,p1
+
+    def plot_errors(self):
+        '''Plot errors in the market clearing conditions for both goods
+        
+        Args: 
+        
+        self
+        
+        Returns:
+        
+        Plot of errors in the market clearing conditions for both goods.
+        '''
+        # Check errors and prices in markets
+        eps1, eps2, p1 = self.check_market_clearing()
+        
+        # Plotting errors
+        plt.figure(figsize=(10, 6))
+        
+        plt.plot(p1, eps1, label="Error in market of good 1")
+        plt.plot(p1, eps2, label="Error in market of good 2")
+        
+        plt.xlabel('Price of good 1 (p1)')
+        plt.ylabel('Market clearing error')
+        plt.title('Error in Markets for good 1 and 2')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
     
-    def market_clearing_price_discrete(self):
-        '''This function finds the market clearing price and the relative demand for x1 and x2 for agent A.
-
-        Returns:
-            p1_optimal (float): Market clearing price of good 1.
-            demand1_A (float): Demand for good 1 by agent A at the optimal price.
-            demand2_A (float): Demand for good 2 by agent A at the optimal price.
-            utility_A (float): Utility of agent A at the optimal price.
-        '''
-        # a. Set up: predefined parameters are recalled, initial guess for the market clearing price is specified, the objective function is defined
-        par = self.par
-        p_initial = 0.5
-        
-        # Define the objective function
-        def obj1(p1):
-            x1A, _ = self.demand_A(p1)
-            x1B, _ = self.demand_B(p1)
-            eps1 = x1A - par.w1A + x1B - (1 - par.w1A)
-            return np.sum(eps1**2)  # Return the sum of squared errors as a scalar
-        
-        # b. Optimization: function root from scipy optimization module uses an iterative algorithm to refine the initial guess until it converges
-        result = optimize.root(obj1, p_initial)
-        p1_optimal = result.x[0]
-        
-        # c. Results: optimal values of target variables are returned
-        demand1_A = self.demand_A(p1_optimal)[0]
-        demand2_A = self.demand_A(p1_optimal)[1]
-        utility_A = self.utility_function_A(demand1_A, demand2_A)
-        
-        return p1_optimal, demand1_A, demand2_A, utility_A
-
-    def compute_excess_demand_at_optimal(self):
-        '''This function computes the excess demand at the optimal market clearing price.
-
-        Returns:
-            eps1_optimal (float): Error in market clearing condition for good 1 at optimal price.
-            eps2_optimal (float): Error in market clearing condition for good 2 at optimal price.
-        '''
-        # Get the optimal price
-        p1_optimal, _, _, _ = self.market_clearing_price_discrete()
-        
-        # Compute demands at the optimal price
-        x1A, x2A = self.demand_A(p1_optimal)
-        x1B, x2B = self.demand_B(p1_optimal)
-        
-        # Compute errors in market clearing conditions at the optimal price
-        eps1_optimal = x1A - self.par.w1A + x1B - (1 - self.par.w1A)
-        eps2_optimal = x2A - self.par.w2A + x2B - (1 - self.par.w2A)
-        
-        return eps1_optimal, eps2_optimal
-
 
     #Question 3
-    def market_clearing_price_continuous(self):
+    def market_clearing_price(self):
 
         '''This function finds the market clearing price and the relative demand for x1 and x2 for agent A.
 
         Args:
     
-        p1: price of good 1 
-        p2: price of good 2
-        demand_A: demand function of agent A
-        demand_B: demand function of agent B
-        w1A (float between 0 and 1): endowment of good 1 held by agent A
-        w2A (float between 0 and 1): endowment of good 2 held by agent A
+        self 
 
         Returns:
     
@@ -246,13 +250,43 @@ class ExchangeEconomyClass:
         par = self.par
         p_initial = 0.5
         obj1 = lambda p1: (self.demand_A(p1[0])[0] -par.w1A + self.demand_B(p1[0])[0] - (1-par.w1A))
-
     #b. Optimization: function root from scipy optimization module uses an iterative algorithm to refine the initial guess until it converges
         result = optimize.root(obj1, p_initial)
         p1_optimal = result.x[0]
-
     #c. Results: optimal values of target variables are returned
-        return p1_optimal, self.demand_A(p1_optimal)[0],self.demand_A(p1_optimal)[1],self.utility_function_A(self.demand_A(p1_optimal)[0],self.demand_A(p1_optimal)[1])
+        return p1_optimal, self.demand_A(p1_optimal)[0],self.demand_A(p1_optimal)[1],self.utility_function_A(self.demand_A(p1_optimal)[0],self.demand_A(p1_optimal)[1]),result
+
+    def plot_market_clearing_errors(self):
+
+        '''Plot errors in the market clearing conditions for both goods and the market clearing price
+        
+        Args:
+        
+        self
+        
+        Returns:
+        
+        Plot of errors in the market clearing conditions for both goods and the market clearing price.
+        '''
+    
+        # Recall results 
+        eps1, eps2, p1 = self.check_market_clearing()
+        p1_optimal, _, _, _, results = self.market_clearing_price()
+        
+        # Plot errors
+        plt.figure(figsize=(10, 6))
+        plt.plot(p1, eps1, label="Error in market of good 1")
+        plt.plot(p1, eps2, label="Error in market of good 2")
+        
+        plt.xlabel('Price of good 1 (p1)')
+        plt.ylabel('Market clearing error')
+        plt.scatter(p1[np.argmin(abs(eps1))], np.min(abs(eps1)), color='red', label='Market clearing price - Discrete case')
+        plt.scatter(p1_optimal, results.fun, color='green', label='Market clearing price - Continuous case')
+        
+        plt.title('Error in Market clearing condition')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
     
     #Question 4.a
     def max_utility_price_discrete(self):
@@ -261,11 +295,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        p1: price of good 1 
-        p2: price of good 2
-        demand_B: demand function of agent B
-        utility_function_A: utility function of agent A
-
+        self
 
         Returns:
     
@@ -294,9 +324,32 @@ class ExchangeEconomyClass:
                 
         #c. Optimization: the price that maximizes A's utility is computed
         p1_optimal = p1_nonnegative[np.argmax(u)]
-        
+
         #d. Results are called
         return p1_optimal,p1_nonnegative,u,u[np.argmax(u)],(1- self.demand_B(p1_optimal)[0]),(1-self.demand_B(p1_optimal)[1])
+    
+    def plot_utility_nonnegative_prices(self):
+        '''
+        Plot utility of agent A against p1_nonnegative prices, highlighting the optimal price
+
+        Args:
+
+        self
+
+        Returns:
+
+        Plot of utility of agent A against p1_nonnegative prices, highlighting the optimal price
+        '''
+        p1_optimal, p1_nonnegative, u, max_utility, demand1, demand2 = self.max_utility_price_discrete()
+
+        plt.plot(p1_nonnegative, u, label="utility")
+        plt.scatter(p1_optimal, max_utility, label="maximal utility", color='red')
+        plt.xlabel('p1')
+        plt.ylabel('utility')
+        plt.title('Utility of Agent A')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
     #Question 4.b
     def max_utility_price_continuous(self):
@@ -305,15 +358,12 @@ class ExchangeEconomyClass:
         
         Args:
     
-        p1: price of good 1 
-        p2: price of good 2
-        demand_B: demand function of agent B
-        utility_function_A: utility function of agent A
-    
+        self
 
         Returns:
     
-        p1_optimal, demand1_A(p1_optimal), demand2_A(p1_optimal), utility_function_A[demand1_A(p1_optimal), demand2_A(p1_optimal)] (float): price maximising utility of A in specified framework, related demands of good 1 and good 2 by agent A and related maximised utility of agent A
+        p1_optimal, demand1_A(p1_optimal), demand2_A(p1_optimal), utility_function_A[demand1_A(p1_optimal), demand2_A(p1_optimal)] (float): price maximising utility of A, when a continuum of prices is considered, 
+        related demands of good 1 and good 2 by agent A and related maximised utility of agent A
         '''
 
         # a. Set up: the objective function is defined
@@ -336,15 +386,12 @@ class ExchangeEconomyClass:
         
         Args:
     
-        p1: price of good 1 
-        p2: price of good 2
-        demand_B: demand function of agent B
-        utility_function_A: utility function of agent A
-
+        self
 
         Returns:
     
-        p1_optimal, demand1_A(p1_optimal), demand2_A(p1_optimal), utility_function_A[demand1_A(p1_optimal), demand2_A(p1_optimal)] (float): price maximising utility of A in specified framework, related demands of good 1 and good 2 by agent A and related maximised utility of agent A
+        p1_optimal, demand1_A(p1_optimal), demand2_A(p1_optimal), utility_function_A[demand1_A(p1_optimal), demand2_A(p1_optimal)] (float): price maximising utility of A when only prices in C are considered,
+        related demands of good 1 and good 2 by agent A and related maximised utility of agent A
         '''
         #a. Set up: a list is created to store values of utility
         utilityfunction = []
@@ -362,16 +409,11 @@ class ExchangeEconomyClass:
     def market_maker_A_unrestrictedtoC(self):
 
         '''This function finds the optimal allocations of x1 and x2 for agent A if the only constraint is that B must not be worse of than in the initial
-            endowment.
+        endowment.
 
         Args:
     
-        p1: price of good 1 
-        p2: price of good 2
-        demand_B: demand function of agent B
-        utility_function_B: utility function of agent B
-        w1A (float between 0 and 1): endowment of good 1 held by agent A
-        w2A (float between 0 and 1): endowment of good 2 held by agent A
+        self
 
         Returns:
     
@@ -394,10 +436,7 @@ class ExchangeEconomyClass:
 
         Args:
     
-        pareto_opt_allocations: pareto optimal allocations contained in set C are called
-        demand_B: demand function of agent B
-        utility_function_A: utility function of agent A
-        utility_function_B: utility function of agent B
+        self
 
         Returns:
     
@@ -414,27 +453,89 @@ class ExchangeEconomyClass:
     
     #c. Results are called
         return sol_case3.x[0], sol_case3.x[1],self.utility_function_A(sol_case3.x[0], sol_case3.x[1])
+
+    #Question 7: Plot all pareto allocations in the Edgeworth box
+    def plot_edgeworth_box_all(self):
+
+        '''This function plots the Edgeworth box with all optimal allocations.
+        
+        Args: 
+        
+        self
+
+        Returns:
+
+        Edgeworth box with all optimal allocations
+        '''
+
+        p1_equilibrium,x1a_equilibrium,x2a_equilibrium,u_equilibrium,results= self.market_clearing_price()
+        x1a_pareto_optimal,x2a_pareto_optimal= self.pareto_opt_allocations()
+        p1_4a_optimal,p1_nonnegative,u,u_4a_optimal,x1a_4a_optimal,x2a_4a_optimal= self.max_utility_price_discrete()
+        p1_4b_optimal,x1a_4b_optimal,x2a_4b_optimal,u_4b_optimal= self.max_utility_price_continuous()
+        x1a_5a_optimal,x2a_5a_optimal,u_5a_optimal= self.market_maker_A_restrictedtoC()
+        x1a_5b_optimal,x2a_5b_optimal, u_5b_optimal= self.market_maker_A_unrestrictedtoC()
+        x1a_social_optimum,x2a_social_optimum,u_social_a_optimal= self.social_planner_optimum()        
+        
+        # Define the dimensions of the Edgeworth box
+        w1bar = 1.0
+        w2bar = 1.0
+        
+        # Set up the figure and axes
+        fig = plt.figure(frameon=True,figsize=(8,8), dpi=100)
+        ax_A = fig.add_subplot(1, 1, 1)
+
+        ax_A.set_xlabel("$x_1^A$")
+        ax_A.set_ylabel("$x_2^A$")
+
+        temp = ax_A.twinx()
+        temp.set_ylabel("$x_2^B$")
+        ax_B = temp.twiny()
+        ax_B.set_xlabel("$x_1^B$")
+        ax_B.invert_xaxis()
+        ax_B.invert_yaxis()
+
+        # Define a smaller size for the scatter points
+        size = 10
+
+        # Plot the different points in the Edgeworth box
+        ax_A.scatter(x1a_equilibrium, x2a_equilibrium, marker='s', color='black', label='3', s=size)
+        ax_A.scatter(x1a_4a_optimal, x2a_4a_optimal, marker='s', color='red', label='4a', s=size)
+        ax_A.scatter(x1a_4b_optimal, x2a_4b_optimal, marker='s', color='yellow', label='4b', s=size)
+        ax_A.scatter(x1a_5a_optimal, x2a_5a_optimal, marker='s', color='green', label='5a', s=size)
+        ax_A.scatter(x1a_5b_optimal, x2a_5b_optimal, marker='s', color='blue', label='5b', s=size)
+        ax_A.scatter(x1a_social_optimum, x2a_social_optimum, marker='s', color='purple', label='6a', s=size)
+        ax_A.scatter(x1a_pareto_optimal, x2a_pareto_optimal, marker='s', color='blue', label='Pareto allocations', alpha=0.09, s=size)
+        ax_A.scatter(self.par.w1A, self.par.w2A, marker='s', color='r', label='endowment', s=size)
+
+        # Plot the limits of the Edgeworth box
+        ax_A.plot([0, w1bar], [0, 0], lw=2, color='black')
+        ax_A.plot([0, w1bar], [w2bar, w2bar], lw=2, color='black')
+        ax_A.plot([0, 0], [0, w2bar], lw=2, color='black')
+        ax_A.plot([w1bar, w1bar], [0, w2bar], lw=2, color='black')
+
+        ax_A.set_xlim([-0.1, w1bar + 0.1])
+        ax_A.set_ylim([-0.1, w2bar + 0.1])
+        ax_B.set_xlim([w1bar + 0.1, -0.1])
+        ax_B.set_ylim([w2bar + 0.1, -0.1])
+
+        ax_A.legend(frameon=True, loc='upper right', bbox_to_anchor=(1.6, 1.0))
+
+        plt.show()
+
     
-    #Question 8
+    #Question 8: plot random draws of w1a and w2a in Edgeworth box
 
-    def edgeworth_box(self):
+    def equilibrium_allocation_random(self):
 
-        '''This function finds the allocations of x1 and x2 for agent A and B in the Edgeworth box given the random draws of w1a and w2a.
-
-        Args:
-    
-        p1: price of good 1 
-        p2: price of good 2
-        demand_A: demand function of agent A
-        demand_B: demand function of agent B
-        w1A (float between 0 and 1): endowment of good 1 held by agent A
-        w2A (float between 0 and 1): endowment of good 2 held by agent A
-        N: number of observations
-        P: number of draws for w1a and w2a
+        ''' Market equilibrium allocation for each tuble of A's randomly drawn endowment.
+        
+        Args: 
+        
+        self
 
         Returns:
     
-        sol1_case3, sol2_case3, utility_function_A[sol1_case3, sol2_case3] (float): optimal allocation when a social planneer maximises aggregate utility, related maximised utility
+        p1, x1, x2 (float): market equilibrium allocation for each tuble of A's randomly drawn endowment
         '''
     #a. Set up
         par = self.par # Predefined parameters are recalled
@@ -461,3 +562,52 @@ class ExchangeEconomyClass:
             i += 1
     #c. Results are called
         return p1, x1, x2
+
+
+    def random_edgeworth_box(self):
+
+        '''This function plots the Edgeworth box with random draws of w1a and w2a.
+
+        Args: 
+        
+        self
+
+        Returns:
+
+        Edgeworth box based on random draws of w1a and w2a
+        '''
+
+        p1_edg,x1_edg,x2_edg = self.equilibrium_allocation_random() # Random draws of w1a and w2a are called
+        par = self.par # Predefined parameters are recalled
+
+        w1bar = 1.0
+        w2bar = 1.0
+
+        fig = plt.figure(frameon=True, figsize=(6, 6), dpi=100)
+        ax_A = fig.add_subplot(1, 1, 1)
+
+        ax_A.set_xlabel("$x_1^A$")
+        ax_A.set_ylabel("$x_2^A$")
+
+        temp = ax_A.twinx()
+        temp.set_ylabel("$x_2^B$")
+        ax_B = temp.twiny()
+        ax_B.set_xlabel("$x_1^B$")
+        ax_B.invert_xaxis()
+        ax_B.invert_yaxis()
+
+        ax_A.scatter(x1_edg, x2_edg, marker='s', color='black', label='allocations')
+
+        ax_A.plot([0, w1bar], [0, 0], lw=2, color='black')
+        ax_A.plot([0, w1bar], [w2bar, w2bar], lw=2, color='black')
+        ax_A.plot([0, 0], [0, w2bar], lw=2, color='black')
+        ax_A.plot([w1bar, w1bar], [0, w2bar], lw=2, color='black')
+
+        ax_A.set_xlim([-0.1, w1bar + 0.1])
+        ax_A.set_ylim([-0.1, w2bar + 0.1])    
+        ax_B.set_xlim([w1bar + 0.1, -0.1])
+        ax_B.set_ylim([w2bar + 0.1, -0.1])
+
+        ax_A.legend(frameon=True, loc='upper right', bbox_to_anchor=(1.6, 1.0))
+
+        plt.show()
