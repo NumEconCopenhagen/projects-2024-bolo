@@ -15,6 +15,6 @@ We apply the **following datasets**:
 1. Resident_population_2021.csv ([Istat](https://demo.istat.it/app/?l=en&a=2021&i=POS))
 1. Population Projection.csv ([Istat](https://demo.istat.it/app/?i=PPR&l=en))
 
-
+At the beginning of the py file, when datasets are read, users should adjust the path from which the datasets are called.
 
 **Dependencies:** Apart from a standard Anaconda Python 3 installation, no additional dependencies are required for the project.

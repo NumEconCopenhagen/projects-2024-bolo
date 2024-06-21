@@ -442,7 +442,7 @@ class EntryExitModel():
             print(f'Optimal quantity for the incumbent firm: {optimal_q}')
             print(f'Equilibium profit for the incumbent firm: {self.profit_m(optimal_q)}')
             print(f'Optimal quantity for the entrant firm: {q2}') 
-            print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,q2)}')
+            print(f'Equilibium profit for the entrant firm: {self.profit_e(optimal_q,q2)}' if q2 > 0 else 'The entrant firm does not enter the market')
         return optimal_q, q2
 
 
