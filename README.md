@@ -20,3 +20,6 @@ Our project is titled Italy, patterns of its Aging problem and is about The demo
 Our project is titled Model Project and is about the Bain-Sylos-Modigliani model of entry and exit. It is modelled by a two stage game, where firm one chooses produced quantity in stage one and firm 2 chooses whether to enter the market in stage 2. First we present the model and the necessary assumptions. Then we solve the model both analytically and numerically.
 
 Furthermore, we extend the model by assuming that firm two is already in the market, which is also known as the Stackelberg model.
+
+**.  Exam Project:**
+In this project we look at 3 problems. In the first problem we look at a production economy and CO2 taxation. In the second problem we consider a career choice model. Lastly, we look at Barycentric interpolation through an algorithm.
